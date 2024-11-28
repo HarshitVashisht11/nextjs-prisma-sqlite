@@ -1,0 +1,17 @@
+version: '3.9'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - sqlite_data:/app/prisma/db
+    environment:
+      DATABASE_URL: "file:/app/prisma/db/dev.db"
+    ports:
+      - "3000:80"
+
+volumes:
+  sqlite_data:
+    driver: local
