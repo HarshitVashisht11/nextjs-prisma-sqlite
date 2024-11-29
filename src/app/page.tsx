@@ -1,26 +1,81 @@
-import { PrismaClient } from '@prisma/client'
+'use client';
 
-const prisma = new PrismaClient()
+import { useState, useEffect } from 'react';
 
-type User = {
-  id: number
-  name: string 
-  email: string
+interface Todo {
+  id: number;
+  title: string;
+  completed: boolean;
 }
 
-export default async function Home() {
-  const users: User[] = await prisma.user.findMany()
+export default function Home() {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [newTodo, setNewTodo] = useState<string>('');
+
+  useEffect(() => {
+    async function fetchTodos() {
+      const res = await fetch('/api/todos');
+      const data: Todo[] = await res.json();
+      setTodos(data);
+    }
+    fetchTodos();
+  }, []);
+
+  async function addTodo() {
+    const res = await fetch('/api/todos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: newTodo }),
+    });
+    const todo = await res.json();
+    setTodos([...todos, todo]);
+    setNewTodo('');
+  }
+
+  async function toggleTodoCompletion(id: number, completed: boolean) {
+    const res = await fetch('/api/todos', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, completed }),
+    });
+    const updatedTodo = await res.json();
+    setTodos(todos.map((todo) => (todo.id === id ? updatedTodo : todo)));
+  }
+
+  async function deleteTodo(id: number) {
+    await fetch('/api/todos', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    setTodos(todos.filter((todo) => todo.id !== id));
+  }
 
   return (
-    <div>
-      <h1>Users</h1>
+    <main>
+      <h1>To-Do App</h1>
+      <div>
+        <input
+          type="text"
+          value={newTodo}
+          onChange={(e) => setNewTodo(e.target.value)}
+          placeholder="New task"
+        />
+        <button onClick={addTodo}>Add</button>
+      </div>
       <ul>
-        {users.map((user) => (
-          <li key={user.id}>
-            {user.name ?? 'No Name'} - {user.email}
+        {todos.map((todo) => (
+          <li key={todo.id}>
+            <input
+              type="checkbox"
+              checked={todo.completed}
+              onChange={() => toggleTodoCompletion(todo.id, !todo.completed)}
+            />
+            {todo.title}
+            <button onClick={() => deleteTodo(todo.id)}>Delete</button>
           </li>
         ))}
       </ul>
-    </div>
-  )
+    </main>
+  );
 }

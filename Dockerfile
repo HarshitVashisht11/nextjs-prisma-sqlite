@@ -19,14 +19,24 @@ RUN npx prisma migrate deploy
 # Generate Prisma Client
 RUN npx prisma generate
 
-# Build Next.js app with static export
+# Build Next.js app
 RUN npm run build
 
 # Production image
-FROM nginx:alpine AS production
+FROM node:20-alpine AS production
 
-# Copy built static files to Nginx
-COPY --from=base /app/out /usr/share/nginx/html
+WORKDIR /app
 
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Copy compiled app and dependencies
+COPY --from=base /app/package.json /app/package-lock.json ./
+COPY --from=base /app/.next ./.next
+COPY --from=base /app/public ./public
+COPY --from=base /app/node_modules ./node_modules
+COPY --from=base /app/prisma ./prisma
+COPY --from=base /app/next.config.ts ./next.config.ts
+
+# Expose the port used by Next.js
+EXPOSE 3000
+
+# Start the Next.js server
+CMD ["npm", "start"]
