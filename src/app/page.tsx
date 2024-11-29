@@ -1,5 +1,4 @@
-'use client';
-
+"use client"
 import { useState, useEffect } from 'react';
 
 interface Todo {
@@ -48,7 +47,7 @@ export default function Home() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
     });
-    setTodos(todos.filter((todo) => todo.id !== id));
+    setTodos(todos.filter((todo) => todo.id !== id)); // Remove the deleted todo from the state
   }
 
   return (
