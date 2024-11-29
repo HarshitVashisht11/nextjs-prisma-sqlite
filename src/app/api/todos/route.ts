@@ -43,7 +43,7 @@ export async function DELETE(req: Request) {
       where: { id },
     });
     return NextResponse.json(deletedTodo);
-  } catch (error) {
+  } catch{
     return NextResponse.json(
       { error: 'Todo not found or could not be deleted.' },
       { status: 404 }
